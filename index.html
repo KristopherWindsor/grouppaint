@@ -5,9 +5,9 @@
 		<title>Group Paint</title>
 		
 		<style>
-			body, html {/*background-color: #ccc;*/ margin: 0; padding: 0; width: 100%; height: 100%;}
-			#controls {/*background-color: red;*/ float: right; text-align: center; width: 100%; height: 100px;}
-			#paint {/*background-color: white*/; width: 100%;}
+			body, html {margin: 0; padding: 0; width: 100%; height: 100%;}
+			#controls {float: right; text-align: center; width: 100%; height: 100px;}
+			#paint {width: 100%;}
 			#controls a {background-color: #55f; color: white; display: inline-block; font-size: 20px; height: 100px; line-height: 100px; text-decoration: none; width: 200px;}
 			
 			#controls.RED a {background-color: #f55;}
@@ -27,7 +27,52 @@
 			var tool = "PENCIL";
 			var mouseDown = false;
 			var mousePrev = null;
-			//todo: store previous mouse position, make the pencil tool draw lines instead of dots
+			var q = [];
+			
+			function render(command, doQ){
+				if (doQ)
+					q.push(command);
+				
+				var ctx = $('#paint')[0].getContext('2d');
+				
+				if (command.type == "PENCIL"){
+					ctx.beginPath();
+					ctx.moveTo(command.px, command.py);
+					ctx.lineTo(command.x, command.y);
+					ctx.lineWidth = 7;
+					ctx.strokeStyle = command.color;
+					ctx.stroke();
+				}
+				if (command.type == "CIRCLE"){
+					ctx.fillStyle = command.color;
+					ctx.beginPath();
+					ctx.arc(command.x, command.y, 10, 0, Math.PI * 2, true);
+					ctx.closePath();
+					ctx.fill();
+				}
+			}
+			
+			function sync(){
+				
+			}
+			
+			function draw(event) {
+				var offset = $('#paint').offset();
+				var scale = $('#paint').width() / 640;
+				var x = (event.pageX - offset.left) / scale, y = (event.pageY - offset.top) / scale;
+				var px = (mousePrev.x - offset.left) / scale, py = (mousePrev.y - offset.top) / scale;
+				
+				if (tool == "PENCIL"){
+					if (Math.abs(event.pageX - mousePrev.x) + Math.abs(event.pageY - mousePrev.y) > 30){
+						render({type: "PENCIL", color: COLORS[color], x: x, y: y, px: px, py: py}, true);
+						mousePrev = {x: event.pageX, y: event.pageY};
+					}
+				}
+				else if (tool == "CIRCLE") {
+					render({type: "CIRCLE", color: COLORS[color], x: x, y: y}, true);
+					mouseDown = false;
+				}
+			}
 			
 			$(document).ready(function () {
 				
@@ -63,34 +108,6 @@
 					if (mouseDown)
 						draw(event);
 				});
-				
-				function draw(event) {
-					var offset = $('#paint').offset();
-					var scale = $('#paint').width() / 640;
-					var x = (event.pageX - offset.left) / scale, y = (event.pageY - offset.top) / scale;
-					var px = (mousePrev.x - offset.left) / scale, py = (mousePrev.y - offset.top) / scale;
-					
-					var ctx = $('#paint')[0].getContext('2d');
-					if (tool == "PENCIL"){
-						if (Math.abs(event.pageX - mousePrev.x) + Math.abs(event.pageY - mousePrev.y) > 30){
-							ctx.beginPath();
-							ctx.moveTo(px, py);
-							ctx.lineTo(x, y);
-							ctx.lineWidth = 7;
-							ctx.strokeStyle = COLORS[color];
-							ctx.stroke();
-							mousePrev = {x: event.pageX, y: event.pageY};
-						}
-					}
-					else if (tool == "CIRCLE") {
-						ctx.fillStyle = COLORS[color];
-						ctx.beginPath();
-						ctx.arc(x, y, 10, 0, Math.PI * 2, true);
-						ctx.closePath();
-						ctx.fill();
-						mouseDown = false;
-					}
-				}
 			});
 		</script>
 	</head>
