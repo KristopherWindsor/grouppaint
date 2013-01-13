@@ -26,6 +26,7 @@
 			var color = "BLUE";
 			var tool = "PENCIL";
 			var mouseDown = false;
+			var mousePrev = null;
 			//todo: store previous mouse position, make the pencil tool draw lines instead of dots
 			
 			$(document).ready(function () {
@@ -52,6 +53,7 @@
 				
 				$(document).mousedown(function (event) {
 					mouseDown = true;
+					mousePrev = {x: event.pageX, y: event.pageY};
 					draw(event);
 				});
 				$(document).mouseup(function () {
@@ -66,16 +68,27 @@
 					var offset = $('#paint').offset();
 					var scale = $('#paint').width() / 640;
 					var x = (event.pageX - offset.left) / scale, y = (event.pageY - offset.top) / scale;
+					var px = (mousePrev.x - offset.left) / scale, py = (mousePrev.y - offset.top) / scale;
 					
 					var ctx = $('#paint')[0].getContext('2d');
-					ctx.fillStyle = COLORS[color];
-					if (tool == "PENCIL")
-						ctx.fillRect(x - 1, y - 1, 2, 2);
+					if (tool == "PENCIL"){
+						if (Math.abs(event.pageX - mousePrev.x) + Math.abs(event.pageY - mousePrev.y) > 30){
+							ctx.beginPath();
+							ctx.moveTo(px, py);
+							ctx.lineTo(x, y);
+							ctx.lineWidth = 7;
+							ctx.strokeStyle = COLORS[color];
+							ctx.stroke();
+							mousePrev = {x: event.pageX, y: event.pageY};
+						}
+					}
 					else if (tool == "CIRCLE") {
+						ctx.fillStyle = COLORS[color];
 						ctx.beginPath();
 						ctx.arc(x, y, 10, 0, Math.PI * 2, true);
 						ctx.closePath();
 						ctx.fill();
+						mouseDown = false;
 					}
 				}
 			});
