@@ -66,7 +66,8 @@
 						room: room,
 						action: "push",
 						drawing: $.extend(true, [], q),
-						clientId: clientId
+						clientId: clientId,
+						postTime: new Date().getTime()
 					};
 					$.ajax({
 						type: "POST",
@@ -87,7 +88,7 @@
 						action: "poll",
 						clientId: clientId,
 						lastUid: lastUid,
-						randomData: new Date().getTime()
+						postTime: new Date().getTime()
 					};
 					$.ajax({
 						type: "POST",
@@ -162,10 +163,10 @@
 				});
 				
 				var paint = $('#paint')[0];
-                paint.addEventListener("touchstart", iPadTouchHandler, false);
-                paint.addEventListener("touchmove", iPadTouchHandler, false);
-                paint.addEventListener("touchend", iPadTouchHandler, false);
-                paint.addEventListener("touchcancel", iPadTouchHandler, false);
+				paint.addEventListener("touchstart", iPadTouchHandler, false);
+				paint.addEventListener("touchmove", iPadTouchHandler, false);
+				paint.addEventListener("touchend", iPadTouchHandler, false);
+				paint.addEventListener("touchcancel", iPadTouchHandler, false);
 
 				room = prompt("Choose a room", "lobby");
 				setInterval(sync, 500);
