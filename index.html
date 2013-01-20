@@ -19,6 +19,7 @@
 		</style>
 		
 		<script src="jquery-1.8.3.min.js"></script>
+		<script src="jquery.ui.ipad.js"></script>
 		
 		<script>
 			var COLORS = {"RED" : "#f55", "BLUE" : "#55f", "GREEN" : "#5d5"};
@@ -160,6 +161,12 @@
 				});
 				
 				setInterval(sync, 500);
+				
+				var paint = $('#paint')[0];
+                paint.addEventListener("touchstart", iPadTouchHandler, false);
+                paint.addEventListener("touchmove", iPadTouchHandler, false);
+                paint.addEventListener("touchend", iPadTouchHandler, false);
+                paint.addEventListener("touchcancel", iPadTouchHandler, false);
 			});
 		</script>
 	</head>
