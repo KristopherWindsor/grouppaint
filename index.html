@@ -68,9 +68,10 @@
 					};
 					$.ajax({
 						type: "POST",
-						url: "/api.php",
+						url: "api.php",
 						data: JSON.stringify(data),
 						dataType: 'json',
+						cache: false,
 						complete: function () {pushReq = false;},
 						error: function () {/* todo requeue everything*/}
 					});
@@ -83,16 +84,17 @@
 						room: "lobby",
 						action: "poll",
 						clientId: clientId,
-						lastUid: lastUid
+						lastUid: lastUid,
+						randomData: new Date().getTime()
 					};
 					$.ajax({
 						type: "POST",
-						url: "/api.php",
+						url: "api.php",
 						data: JSON.stringify(data),
 						dataType: 'json',
+						cache: false,
 						complete: function () {pollReq = false;},
 						success: function (data) {
-							console.log(data);
 							if (data && data.drawing)
 								for (var i in data.drawing){
 									render(data.drawing[i], false);

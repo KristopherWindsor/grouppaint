@@ -22,7 +22,7 @@ function poll(){
 	
 	// get existing drawing
 	$res = array();
-	for ($i = 0; $i < 20; $i++){
+	for ($i = 0; $i < 10; $i++){
 		$drawing = array();
 		if (file_exists('rooms/' . $room))
 			$drawing = array_map('json_decode', array_filter(explode("\n", file_get_contents('rooms/' . $room))));
