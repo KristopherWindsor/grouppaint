@@ -18,7 +18,7 @@ else if (@$input->action == 'push')
 	push();
 
 function poll(){
-	global $input, $room;
+	global $input, $room, $clientId;
 	
 	// get existing drawing
 	$res = array();
@@ -28,7 +28,7 @@ function poll(){
 			$drawing = array_map('json_decode', array_filter(explode("\n", file_get_contents('rooms/' . $room))));
 		
 		foreach ($drawing as $j)
-			if ($j->clientId != @$input->clientId && $j->uid > @$input->lastUid)
+			if ($j->clientId != $clientId && $j->uid > @$input->lastUid)
 				$res[] = $j;
 		
 		if ($res)
@@ -56,11 +56,15 @@ function push() {
 		}
 	}
 
-	// get input drawing, add to memory
+	// validate input and add uids
 	$new_drawing = (array) @$input->drawing;
 	foreach ($new_drawing as & $new_drawing_item){
-		//todo: validate / bail here
-		$new_drawing_item->uid = $next_index++;
+		foreach ($new_drawing_item as $i => $j){
+			$j = str_replace('#', '', str_replace('.', '', $j));
+			if (!ctype_alnum($i) || !ctype_alnum($j))
+				return;
+			$new_drawing_item->uid = $next_index++;
+		}
 	}
 
 	// append input drawing to data store
