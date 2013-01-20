@@ -28,10 +28,16 @@
 			var mouseDown = false;
 			var mousePrev = null;
 			var q = [];
+			var clientId = Math.floor(Math.random() * 100000);
+			var lastUid = -1;
+			var pushReq = false;
+			var pollReq = false;
 			
 			function render(command, doQ){
-				if (doQ)
+				if (doQ){
+					command.clientId = clientId;
 					q.push(command);
+				}
 				
 				var ctx = $('#paint')[0].getContext('2d');
 				
@@ -53,7 +59,49 @@
 			}
 			
 			function sync(){
+				if (!pushReq && q.length){
+					var data = {
+						room: "lobby",
+						action: "push",
+						drawing: $.extend(true, [], q),
+						clientId: clientId
+					};
+					$.ajax({
+						type: "POST",
+						url: "/api.php",
+						data: JSON.stringify(data),
+						dataType: 'json',
+						complete: function () {pushReq = false;},
+						error: function () {/* todo requeue everything*/}
+					});
+					q = [];
+					pushReq = true;
+				}
 				
+				if (!pollReq){
+					var data = {
+						room: "lobby",
+						action: "poll",
+						clientId: clientId,
+						lastUid: lastUid
+					};
+					$.ajax({
+						type: "POST",
+						url: "/api.php",
+						data: JSON.stringify(data),
+						dataType: 'json',
+						complete: function () {pollReq = false;},
+						success: function (data) {
+							console.log(data);
+							if (data && data.drawing)
+								for (var i in data.drawing){
+									render(data.drawing[i], false);
+									lastUid = data.drawing[i].uid;
+								}
+						}
+					});
+					pollReq = true;
+				}
 			}
 			
 			function draw(event) {
@@ -108,6 +156,8 @@
 					if (mouseDown)
 						draw(event);
 				});
+				
+				setInterval(sync, 500);
 			});
 		</script>
 	</head>

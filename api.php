@@ -2,30 +2,67 @@
 
 // using files as the data store and pretending we're too cool for Mongo
 
+header('Content-type: application/json');
+
 $input = json_decode(file_get_contents('php://input'));
 
 $room = @$input->room . '';
 if (!ctype_alnum($room) || !$room || strlen($room) > 32)
 	$room =  'lobby';
 
-// get existing drawing
-$drawing = array();
-$room_exists = file_exists('rooms/' . $room);
-if ($room_exists)
-	$drawing = array_map('json_decode', array_filter(explode("\n", file_get_contents('rooms/' . $room))));
+$clientId = max(0, (int) @$input->clientId);
 
-// get input drawing, add to memory
-$new_drawing = (array) @$input->drawing;
-$next_index = $drawing ? $drawing[0]->uid + 1: 0;
-foreach ($new_drawing as & $new_drawing_item){
-	//todo: validate / bail here
-	$new_drawing_item->uid = $next_index++;
-	$drawing[] = $new_drawing_item;
+if (@$input->action == 'poll')
+	poll();
+else if (@$input->action == 'push')
+	push();
+
+function poll(){
+	global $input, $room;
+	
+	// get existing drawing
+	$res = array();
+	for ($i = 0; $i < 20; $i++){
+		$drawing = array();
+		if (file_exists('rooms/' . $room))
+			$drawing = array_map('json_decode', array_filter(explode("\n", file_get_contents('rooms/' . $room))));
+		
+		foreach ($drawing as $j)
+			if ($j->clientId != @$input->clientId && $j->uid > @$input->lastUid)
+				$res[] = $j;
+		
+		if ($res)
+			break;
+		sleep(1);
+	}
+
+	echo json_encode(array('drawing' => $res));
 }
 
-// append input drawing to data store
-file_put_contents('rooms/' . $room, ($room_exists ? "\n" : '') . implode("\n", $new_drawing), FILE_APPEND);
+function push() {
+	global $input, $room;
+	
+	// get existing drawing
+	$drawing = array();
+	$next_index = 0;
+	$room_exists = file_exists('rooms/' . $room);
+	if ($room_exists){
+		$drawing = array_map('json_decode', array_filter(explode("\n", file_get_contents('rooms/' . $room))));
+		$next_index = $drawing[count($drawing) - 1]->uid + 1;
+		// truncate to keep drawing manageable
+		if (count($drawing) > 1000){
+			$drawing = array_slice($drawing, count($drawing) - 1000);
+			file_put_contents('rooms/' . $room, implode("\n", array_map('json_encode', $drawing)));
+		}
+	}
 
-// output
-header('Content-type: application/json');
-echo json_encode($drawing);
+	// get input drawing, add to memory
+	$new_drawing = (array) @$input->drawing;
+	foreach ($new_drawing as & $new_drawing_item){
+		//todo: validate / bail here
+		$new_drawing_item->uid = $next_index++;
+	}
+
+	// append input drawing to data store
+	file_put_contents('rooms/' . $room, ($room_exists ? "\n" : '') . implode("\n", array_map('json_encode', $new_drawing)), FILE_APPEND);
+}
