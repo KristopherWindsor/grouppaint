@@ -33,6 +33,7 @@
 			var lastUid = -1;
 			var pushReq = false;
 			var pollReq = false;
+			var room = null;
 			
 			function render(command, doQ){
 				if (doQ){
@@ -62,7 +63,7 @@
 			function sync(){
 				if (!pushReq && q.length){
 					var data = {
-						room: "lobby",
+						room: room,
 						action: "push",
 						drawing: $.extend(true, [], q),
 						clientId: clientId
@@ -82,7 +83,7 @@
 				
 				if (!pollReq){
 					var data = {
-						room: "lobby",
+						room: room,
 						action: "poll",
 						clientId: clientId,
 						lastUid: lastUid,
@@ -160,13 +161,14 @@
 						draw(event);
 				});
 				
-				setInterval(sync, 500);
-				
 				var paint = $('#paint')[0];
                 paint.addEventListener("touchstart", iPadTouchHandler, false);
                 paint.addEventListener("touchmove", iPadTouchHandler, false);
                 paint.addEventListener("touchend", iPadTouchHandler, false);
                 paint.addEventListener("touchcancel", iPadTouchHandler, false);
+
+				room = prompt("Choose a room", "lobby");
+				setInterval(sync, 500);
 			});
 		</script>
 	</head>
